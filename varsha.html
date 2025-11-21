@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Digital Companion</title>
+  <meta name="description" content="Friendly AI companion that detects your mood, recommends quotes, songs and fun mini-games to lift you up." />
+
+  <style>
+    :root{
+      --bg: #f6fbff;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent: #6ea8fe;
+      --accent-2: #a6d8ff;
+      --success: #7ee787;
+      --glass: rgba(255,255,255,0.6);
+      --radius: 16px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#eef9ff);color:#0f172a}
+    .container{max-width:980px;margin:32px auto;padding:20px}
+
+    header{display:flex;align-items:center;gap:16px}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo .mark{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:22px;box-shadow:0 6px 18px rgba(16,24,40,0.08)}
+    h1{font-size:22px;margin:0}
+    p.lead{margin:6px 0 0;color:var(--muted)}
+
+    main{margin-top:22px;display:grid;grid-template-columns:1fr 380px;gap:22px}
+
+    /* Left column - Home */
+    .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:0 6px 24px rgba(15,23,42,0.06)}
+
+    .hero{padding:28px;border-radius:14px;background:linear-gradient(180deg,rgba(106,168,254,0.12),rgba(166,216,255,0.06));display:flex;gap:18px;align-items:center}
+    .hero .ill{width:120px;height:120px;border-radius:12px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(110,168,254,0.12)}
+    .hero h2{margin:0 0 6px;font-size:18px}
+    .hero p{margin:0;color:var(--muted)}
+
+    .input-area{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+    textarea{resize:vertical;min-height:110px;padding:14px;border-radius:12px;border:1px solid rgba(15,23,42,0.06);font-size:15px}
+    .controls{display:flex;gap:10px;align-items:center}
+    button.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;color:white;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 8px 18px rgba(106,168,254,0.14)}
+    button.ghost{background:transparent;border:1px solid rgba(15,23,42,0.06);padding:10px 12px;border-radius:12px;cursor:pointer}
+
+    /* Right column - Sidebar */
+    .sidebar h3{margin-top:0}
+    .aff{display:flex;flex-direction:column;gap:10px}
+    .affirm{background:linear-gradient(180deg,#fff,#f7fbff);padding:12px;border-radius:10px}
+
+    /* Mood result card */
+    .mood-card{display:none;padding:18px;border-radius:14px;position:relative;overflow:hidden}
+    .mood-card.show{display:block}
+    .mood-emoji{font-size:48px}
+    .mood-title{font-size:20px;margin:8px 0}
+    .mood-quote{color:var(--muted);margin:6px 0 12px}
+    .songs{display:flex;flex-direction:column;gap:8px}
+    .song{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.01))}
+
+    .games{display:flex;flex-direction:column;gap:10px}
+    .game-btn{padding:10px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:white;cursor:pointer}
+
+    footer{margin-top:28px;padding:18px;text-align:center;color:var(--muted);font-size:14px}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center}
+    .modal.show{display:flex}
+    .modal .win{background:white;padding:18px;border-radius:12px;max-width:720px;width:94%}
+
+    /* small screens */
+    @media (max-width:880px){main{grid-template-columns:1fr;}
+      .hero{flex-direction:row}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="mark">MD</div>
+        <div>
+          <h1>My Digital Companion</h1>
+          <p class="lead">A friendly AI to understand how you feel and help you feel better.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="card hero">
+          <div class="ill" aria-hidden>
+            <!-- cute SVG companion -->
+            <svg width="76" height="76" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="22" height="22" rx="6" fill="white" />
+              <path d="M8 9c0 .552-.448 1-1 1s-1-.448-1-1 .448-1 1-1 1 .448 1 1z" fill="#6ea8fe"/>
+              <path d="M16 9c0 .552-.448 1-1 1s-1-.448-1-1 .448-1 1-1 1 .448 1 1z" fill="#6ea8fe"/>
+              <path d="M8 14c1.333 1.2 3.333 1.2 4.666 0" stroke="#0f172a" stroke-linecap="round" stroke-width="0.8"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Hi — I’m your digital companion</h2>
+            <p>Tell me how you're feeling in your own words and I'll do my best to understand and help.</p>
+          </div>
+        </div>
+
+        <div class="card input-area" tabindex="0">
+          <label for="moodText"><strong>How are you feeling today? Tell me in your own words.</strong></label>
+          <textarea id="moodText" placeholder="Type anything — a sentence, a few words, or a long message."></textarea>
+          <div class="controls">
+            <button class="primary" id="analyzeBtn">Analyze My Mood</button>
+            <button class="ghost" id="clearBtn">Clear</button>
+            <div style="margin-left:auto;color:var(--muted);font-size:13px">AI analysis runs locally in your browser</div>
+          </div>
+
+          <!-- Mood result card -->
+          <div class="mood-card" id="moodCard" aria-live="polite">
+            <div style="display:flex;gap:14px;align-items:center">
+              <div class="mood-emoji" id="moodEmoji">🙂</div>
+              <div>
+                <div class="mood-title" id="moodTitle">Feeling</div>
+                <div class="mood-quote" id="moodQuote">Here's a quote to match your mood.</div>
+              </div>
+            </div>
+
+            <hr style="margin:12px 0;border:none;border-top:1px solid rgba(15,23,42,0.04)" />
+
+            <div>
+              <h4 style="margin:0 0 8px">Song suggestions</h4>
+              <div class="songs" id="songList"></div>
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+              <button class="primary" id="playGameBtn">Would you like to play a game or take a quiz to uplift your mood?</button>
+              <button class="ghost" id="devotionalBtn">Spiritual options</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Games / Quiz modal -->
+        <div class="modal" id="modal">
+          <div class="win">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 id="modalTitle">Games & Quizzes</h3>
+              <button class="ghost" id="closeModal">Close</button>
+            </div>
+
+            <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px" id="gamesArea">
+              <div class="card">
+                <h4>Memory Match</h4>
+                <p style="color:var(--muted)">Flip cards to find pairs. Fun to boost focus.</p>
+                <button class="game-btn" data-game="memory">Play Memory</button>
+              </div>
+              <div class="card">
+                <h4>Reaction Game</h4>
+                <p style="color:var(--muted)">Tap the button when the color changes.</p>
+                <button class="game-btn" data-game="reaction">Play Reaction</button>
+              </div>
+              <div class="card">
+                <h4>Positivity Quiz</h4>
+                <p style="color:var(--muted)">Short fun quiz to focus on what went well today.</p>
+                <button class="game-btn" data-game="quiz">Take Quiz</button>
+              </div>
+              <div class="card">
+                <h4>Quick Trivia</h4>
+                <p style="color:var(--muted)">A few light trivia questions for distraction.</p>
+                <button class="game-btn" data-game="trivia">Start Trivia</button>
+              </div>
+            </div>
+
+            <div id="gamePlay" style="margin-top:14px"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <aside class="sidebar">
+        <div class="card">
+          <h3>Daily Affirmation</h3>
+          <div class="aff" id="dailyAff">
+            <div class="affirm" id="affirmText">You are capable of more than you know.</div>
+            <button class="ghost" id="newAff">Another</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3>Quick Mood Tips</h3>
+          <ul style="margin:8px 0 0;padding-left:18px;color:var(--muted)">
+            <li>Take a short walk or stretch.</li>
+            <li>Try deep breathing for 2 minutes.</li>
+            <li>Listen to a song you love.</li>
+            <li>Write one thing you're grateful for.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3>About</h3>
+          <p style="color:var(--muted);margin:0">This demo uses a lightweight, local sentiment engine (AFINN-style word scoring + keyword mapping) to detect moods. No text leaves your browser unless you optionally share it.</p>
+        </div>
+
+      </aside>
+    </main>
+
+    <footer>
+      My Digital Companion — made with care.
+    </footer>
+  </div>
+
+  <script>
+    /* ========== Lightweight sentiment + mood detection ========== */
+    // A small AFINN-inspired lexicon (not exhaustive) with scores
+    const AFINN = {
+      "happy":3, "joy":3, "love":3, "excited":3, "great":2, "good":2, "awesome":3,
+      "sad":-3, "depressed":-3, "unhappy":-2, "miserable":-3, "cry":-2,
+      "angry":-3, "mad":-2, "furious":-3, "annoyed":-2,
+      "anxious":-2, "worried":-2, "stressed":-2, "panic":-3, "scared":-2,
+      "bored":-1, "tired":-1, "sleepy":-1
+    };
+
+    // Keywords for mapping to more specific moods
+    const MOOD_KEYWORDS = {
+      'anxious':['anxious','worried','panic','nervous','uneasy','scared','fear'],
+      'stressed':['stressed','overwhelmed','pressure','deadline','burnout'],
+      'excited':['excited','thrilled','pumped','eager'],
+      'angry':['angry','mad','furious','irritated','annoyed'],
+      'bored':['bored','meh','nothing to do','idle'],
+      'sad':['sad','depressed','down','unhappy','lonely'],
+      'happy':['happy','joy','glad','content','pleased','good']
+    };
+
+    const QUOTES = {
+      happy:["Happiness is a direction, not a place.","Keep shining — your joy is contagious."],
+      sad:["This too shall pass.","It's okay to feel down — be kind to yourself."],
+      anxious:["Breathe in for 4, hold for 4, breathe out for 6.","Small steps are progress — you're doing enough."],
+      stressed:["One task at a time. You don't have to solve everything today.","Pause. Breathe. Continue."],
+      excited:["Ride the wave — channel it into something creative!","Your energy is a spark — let it light something new."] ,
+      angry:["Count to ten. Cool down, then respond.","You are more than your anger — act with intention."],
+      bored:["Try something tiny and new — novelty resets the brain.","Pick one small task you can finish in 5 minutes."]
+    };
+
+    const SONGS = {
+      happy:["Walking on Sunshine - Katrina & The Waves","Happy - Pharrell Williams","Best Day Of My Life - American Authors"],
+      sad:["Fix You - Coldplay","Someone Like You - Adele","Skinny Love - Bon Iver"],
+      anxious:["Weightless - Marconi Union (calming)","Breathe Me - Sia","Holocene - Bon Iver"],
+      stressed:["Let It Be - The Beatles","Here Comes The Sun - The Beatles","Don't Worry Be Happy - Bobby McFerrin"],
+      excited:["Can't Stop The Feeling - Justin Timberlake","Good Time - Owl City & Carly Rae Jepsen","Uptown Funk - Bruno Mars"],
+      angry:["Break Stuff - Limp Bizkit","Killing In The Name - Rage Against The Machine","You Oughta Know - Alanis Morissette"],
+      bored:["Sunday Morning - Maroon 5","Electric Feel - MGMT","Float On - Modest Mouse"]
+    };
+
+    // Helpers
+    function tokenize(text){
+      return text.toLowerCase().replace(/[^\w\s]/g,' ').split(/\s+/).filter(Boolean);
+    }
+
+    function afinnScore(text){
+      const toks = tokenize(text);
+      let score=0;
+      toks.forEach(t=>{ if(AFINN[t]) score += AFINN[t]; });
+      return score;
+    }
+
+    function detectMood(text){
+      const toks = tokenize(text);
+      // check keyword mapping for specific moods
+      for(const [m,words] of Object.entries(MOOD_KEYWORDS)){
+        for(const w of words){ if(toks.includes(w)) return m; }
+      }
+      // fallback to valence score
+      const score = afinnScore(text);
+      if(score>=3) return 'happy';
+      if(score<=-3) return 'sad';
+      if(score<=-1) return 'stressed';
+      return 'neutral';
+    }
+
+    /* ========== UI wiring ========== */
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const moodText = document.getElementById('moodText');
+    const moodCard = document.getElementById('moodCard');
+    const moodEmoji = document.getElementById('moodEmoji');
+    const moodTitle = document.getElementById('moodTitle');
+    const moodQuote = document.getElementById('moodQuote');
+    const songList = document.getElementById('songList');
+    const playGameBtn = document.getElementById('playGameBtn');
+    const devotionalBtn = document.getElementById('devotionalBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+    const gamesArea = document.getElementById('gamesArea');
+    const gamePlay = document.getElementById('gamePlay');
+
+    analyzeBtn.addEventListener('click',()=>{
+      const text = moodText.value.trim();
+      if(!text){ alert('Please tell me how you are feeling.'); return; }
+      const mood = detectMood(text);
+      showMood(mood,text);
+    });
+
+    clearBtn.addEventListener('click',()=>{ moodText.value=''; moodCard.classList.remove('show'); });
+
+    function showMood(mood,origText){
+      moodCard.classList.add('show');
+      const emojiMap = {happy:'😁',sad:'😢',anxious:'😰',stressed:'😫',excited:'🤩',angry:'😡',bored:'😐',neutral:'🙂'};
+      moodEmoji.textContent = emojiMap[mood] || '🙂';
+      moodTitle.textContent = (mood==='neutral')? 'A little neutral' : mood.charAt(0).toUpperCase()+mood.slice(1);
+
+      // choose a quote
+      const qarr = QUOTES[mood] || ["Take one small step — you're not alone."];
+      moodQuote.textContent = qarr[Math.floor(Math.random()*qarr.length)];
+
+      // songs
+      const sarr = SONGS[mood] || ["Here Comes The Sun - The Beatles"];
+      songList.innerHTML='';
+      sarr.forEach((s,i)=>{
+        const div = document.createElement('div'); div.className='song';
+        div.innerHTML = `<div style=\"font-size:14px;\">${i+1}. ${s}</div><div style=\"font-size:12px;color:var(--muted)\">Add</div>`;
+        songList.appendChild(div);
+      });
+
+      // small mood-adaptive style
+      const colorMap = {happy:'#fff3e0',sad:'#eef6ff',anxious:'#fff0f0',stressed:'#fff7ed',excited:'#f0fff6',angry:'#fff0f0',bored:'#f8f9fb',neutral:'#f7fbff'};
+      moodCard.style.background = `linear-gradient(180deg, ${colorMap[mood]||'#fff'}, #fff)`;
+
+      // log to console (local only)
+      console.log('Mood detected:',mood, {text:origText});
+
+      // ask about devotional content via soft popup if neutral or sad or anxious
+      if(['sad','anxious','neutral'].includes(mood)){
+        setTimeout(()=>{
+          if(confirm('Would you like devotional or spiritual suggestions to comfort you?')){
+            showDevotional();
+          }
+        },600);
+      }
+    }
+
+    // devotional
+    function showDevotional(){
+      alert('Devotional Suggestions:\n\n- Short prayer or breath-focused meditation (5 minutes)\n- Read a comforting verse/line\n- Listen to calming devotional music');
+    }
+
+    devotionalBtn.addEventListener('click',showDevotional);
+
+    // modal games
+    playGameBtn.addEventListener('click',()=>{ modal.classList.add('show'); document.getElementById('modalTitle').textContent='Games & Quizzes'; });
+    closeModal.addEventListener('click',()=>{ modal.classList.remove('show'); gamePlay.innerHTML=''; });
+
+    gamesArea.addEventListener('click',e=>{
+      const g = e.target.closest('[data-game]');
+      if(!g) return; const game = g.dataset.game; startGame(game);
+    });
+
+    function startGame(game){
+      gamePlay.innerHTML='';
+      if(game==='memory') memoryGame();
+      if(game==='reaction') reactionGame();
+      if(game==='quiz') positivityQuiz();
+      if(game==='trivia') quickTrivia();
+    }
+
+    /* Memory: simple card pairs */
+    function memoryGame(){
+      const symbols = ['🍎','🍌','🍇','🍓','🍍','🍒'];
+      const cards = [...symbols,...symbols].sort(()=>Math.random()-0.5);
+      const board = document.createElement('div'); board.style.display='grid'; board.style.gridTemplateColumns='repeat(4,1fr)'; board.style.gap='8px';
+      let first=null,second=null,lock=false,matched=0;
+      cards.forEach((c,i)=>{
+        const btn = document.createElement('button'); btn.className='game-btn'; btn.textContent='?'; btn.style.fontSize='24px'; btn.dataset.symbol=c;
+        btn.addEventListener('click',()=>{
+          if(lock || btn.classList.contains('matched')) return;
+          btn.textContent = c;
+          if(!first){ first=btn; return; }
+          if(first===btn) return;
+          second=btn; lock=true;
+          setTimeout(()=>{
+            if(first.dataset.symbol===second.dataset.symbol){ first.classList.add('matched'); second.classList.add('matched'); matched+=2; }
+            else{ first.textContent='?'; second.textContent='?'; }
+            first=null; second=null; lock=false;
+            if(matched===cards.length){ alert('Nice! You matched them all — great focus.'); }
+          },700);
+        });
+        board.appendChild(btn);
+      });
+      gamePlay.appendChild(board);
+    }
+
+    /* Reaction game */
+    function reactionGame(){
+      const wrap = document.createElement('div');
+      const desc = document.createElement('p'); desc.textContent='Wait for the button to turn green, then click as fast as you can.'; desc.style.color='var(--muted)';
+      const btn = document.createElement('button'); btn.className='primary'; btn.textContent='Get Ready'; btn.style.marginTop='8px';
+      wrap.appendChild(desc); wrap.appendChild(btn); gamePlay.appendChild(wrap);
+      let start=0,timeout;
+      btn.addEventListener('click',()=>{
+        if(btn.textContent==='Get Ready'){
+          btn.textContent='Wait...'; btn.disabled=true; const delay = 1000 + Math.random()*3000;
+          timeout = setTimeout(()=>{ btn.style.background='linear-gradient(90deg,#7ee787,#aef7c2)'; btn.textContent='Click!'; btn.disabled=false; start=performance.now(); },delay);
+        } else if(btn.textContent==='Click!'){
+          const rt = performance.now()-start; alert(`Your reaction time: ${Math.round(rt)} ms`); btn.textContent='Get Ready'; btn.style.background='linear-gradient(90deg,var(--accent),var(--accent-2))';
+        }
+      });
+    }
+
+    /* Positivity quiz - 3 quick prompts */
+    function positivityQuiz(){
+      const q = [
+        {q:'Name one thing you are grateful for today.', type:'text'},
+        {q:'What is one small win you had recently?', type:'text'},
+        {q:'Pick an activity that would make you feel a little better (walk, music, chat, rest).', type:'choice', opts:['Walk','Music','Chat','Rest']}
+      ];
+      let step=0; const answers=[];
+      const area = document.createElement('div');
+      const prompt = document.createElement('div'); prompt.style.marginBottom='8px';
+      const input = document.createElement('input'); input.style.padding='8px'; input.style.width='100%'; input.style.borderRadius='8px';
+      const next = document.createElement('button'); next.className='primary'; next.textContent='Next'; next.style.marginTop='8px';
+      area.appendChild(prompt); area.appendChild(input); area.appendChild(next);
+      gamePlay.appendChild(area);
+      function render(){
+        const cur=q[step]; prompt.textContent = cur.q; input.value=''; input.placeholder='Type here...';
+        if(cur.type==='choice'){
+          input.style.display='none'; const choices = document.createElement('div'); choices.style.display='flex'; choices.style.gap='8px'; choices.style.flexWrap='wrap';
+          cur.opts.forEach(o=>{ const b=document.createElement('button'); b.className='game-btn'; b.textContent=o; b.addEventListener('click',()=>{ answers.push(o); step++; if(step<q.length) render(); else finish(); }); choices.appendChild(b); });
+          area.insertBefore(choices,next);
+        }
+      }
+      next.addEventListener('click',()=>{
+        const cur=q[step]; if(cur.type==='text'){ if(!input.value.trim()){ alert('Please answer.'); return; } answers.push(input.value.trim()); step++; if(step<q.length) render(); else finish(); }
+      });
+      function finish(){ gamePlay.innerHTML=''; const res = document.createElement('div'); res.innerHTML=`<h4>Nice work!</h4><p style=\"color:var(--muted)\">Remember these: ${answers.slice(0,2).join(' • ')}. Try: ${answers[2] || 'something small'}</p>`; gamePlay.appendChild(res); }
+      render();
+    }
+
+    /* Quick trivia - 3 easy Qs */
+    function quickTrivia(){
+      const qs = [
+        {q:'What planet do we live on?', a:'earth'},
+        {q:'What color do you get when you mix blue and yellow?', a:'green'},
+        {q:'How many days are there in a week?', a:'7'}
+      ];
+      let idx=0,score=0;
+      const area = document.createElement('div');
+      const prompt = document.createElement('div'); prompt.style.marginBottom='8px';
+      const input = document.createElement('input'); input.style.padding='8px'; input.style.width='100%'; input.style.borderRadius='8px';
+      const next = document.createElement('button'); next.className='primary'; next.textContent='Submit'; next.style.marginTop='8px';
+      area.appendChild(prompt); area.appendChild(input); area.appendChild(next); gamePlay.appendChild(area);
+      function render(){ prompt.textContent = qs[idx].q; input.value=''; }
+      next.addEventListener('click',()=>{ if(!input.value.trim()){ alert('Type an answer.'); return; } if(input.value.toLowerCase().includes(qs[idx].a)){ score++; } idx++; if(idx<qs.length) render(); else end(); });
+      function end(){ gamePlay.innerHTML=''; const res = document.createElement('div'); res.innerHTML=`<h4>Done!</h4><p style=\"color:var(--muted)\">You scored ${score}/${qs.length}. Great job — keep that brain active!</p>`; gamePlay.appendChild(res); }
+      render();
+    }
+
+    /* Affirmations */
+    const AFFS = [
+      'You are capable of more than you think.',
+      'Small progress is still progress.',
+      'You are worthy of good things.',
+      'Today is a fresh start.'
+    ];
+    document.getElementById('newAff').addEventListener('click',()=>{ document.getElementById('affirmText').textContent = AFFS[Math.floor(Math.random()*AFFS.length)]; });
+
+    // small UX: press Enter+Ctrl to analyze
+    moodText.addEventListener('keydown',e=>{ if(e.key==='Enter' && (e.ctrlKey||e.metaKey)){ analyzeBtn.click(); } });
+
+    // initial random affirmation
+    document.getElementById('affirmText').textContent = AFFS[Math.floor(Math.random()*AFFS.length)];
+
+  </script>
+</body>
+</html>
