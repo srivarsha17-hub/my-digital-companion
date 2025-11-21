@@ -1,2 +1,1 @@
-# my-digital-companion
-here is the website please 
+# my-digital-companion 
